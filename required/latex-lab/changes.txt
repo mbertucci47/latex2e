@@ -1,3 +1,56 @@
+2026-07-27  Frank Mittelbach  <Frank.Mittelbach@latex-project.org>
+
+	* latex-lab-block.dtx (subsection{Templates}):
+	Replaced key legacy-code with early-legacy-code and late-legacy-code, the second
+        being executed after returing to hmode (tagging/1503)
+
+2026-07-12  Frank Mittelbach  <Frank.Mittelbach@latex-project.org>
+
+	* latex-lab-firstaid.dtx (subsection{AMS classes}):
+	Reorganize the first aid for AMS classes. We now write a file for each class
+	that is loaded after the class has been loaded.
+
+	Provide appropriate heading template instances for the AMS classes (tagging/1477)
+
+	* latex-lab-sec-template.dtx (subsection{General helper commands}):
+	Support adding punctuations if not already present (tagging/1477)
+
+2026-07-08  Frank Mittelbach  <Frank.Mittelbach@latex-project.org>
+
+	* latex-lab-sec-template.dtx (chaptermark {#1}):
+	Define \@chapapp, if necessary (tagging/1482)
+
+2026-07-06  Frank Mittelbach  <Frank.Mittelbach@latex-project.org>
+
+	* latex-lab-block.dtx (subsubsection{Declarations for theorem-like environments}):
+	Do not automatically define a star form of the environment (tagging/1476)
+
+2026-07-04  Frank Mittelbach  <Frank.Mittelbach@latex-project.org>
+
+	* latex-lab-sec-template.dtx (subsubsection{Internal commands used by the template code}):
+	Support a \texttt{force-unnumbered} key (tagging/1473)
+
+2026-06-28  Frank Mittelbach  <Frank.Mittelbach@latex-project.org>
+
+	* latex-lab-enumitem.dtx (subsubsection{\texttt{partopsep}}):
+	The key \partopsep needs to set two keys (tagging/1441)
+
+	(subsubsection{\texttt{topsep}}):
+	The key \topsep needs to set two keys (tagging/1441)
+
+2026-06-22  Frank Mittelbach  <Frank.Mittelbach@latex-project.org>
+
+	* latex-lab-block.dtx (subsubsection{Implementation of \insttype{captionedtext}):
+	Remove stray code causing issues with unknown keys (gh/2126)
+
+2026-06-21  Frank Mittelbach  <Frank.Mittelbach@latex-project.org>
+
+	* latex-lab-sec-template.dtx (subsubsection{Templates of type \texttt{heading}}):
+	Support column-spanning for chapters and the like (tagging/1436)
+
+2026-06-21 Joseph Wright  <Joseph.Wright@latex-project.org>
+	Switch generally to US spelling
+
 2026-06-15  Frank Mittelbach  <Frank.Mittelbach@latex-project.org>
 
 	* latex-lab-block.dtx (subsubsection{Tagging recipes}):
@@ -164,7 +217,7 @@ use tagging sockets, use symbolic names, add support for title block structure.
 
 2026-04-24  Ulrike Fischer  <Ulrike.Fischer@latex-project.org>
 	* latex-lab-sec.dtx:
-		* remove the patches for sectioning commands as this is superseeded
+		* remove the patches for sectioning commands as this is superseded
 		  by the template code
 		* remove unneeded hyperref patches
 		* remove testphase wrapper
@@ -883,7 +936,7 @@ use tagging sockets, use symbolic names, add support for title block structure.
 	Drop \@noitemerr from \addvspace and \addpenalty
 
 2024-08-29 Ulrike Fischer <Ulrike.Fischer@latex-project.org>
-	* latex-lab-math.dtx: avoid loosing math if tagging is suspended,
+	* latex-lab-math.dtx: avoid losing math if tagging is suspended,
 	  tagging-project issue #661
 
 2024-08-22 Joseph Wright <Joseph.Wright@latex-project.org>

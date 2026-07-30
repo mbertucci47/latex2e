@@ -16,8 +16,8 @@
 %
 %    https://github.com/latex3/latex2e/issues
 %
-\def\ltlabdoctaggingdate{2026-04-28}
-\def\ltlabdoctaggingversion{0.80j}
+\def\ltlabdoctaggingdate{2026-07-27}
+\def\ltlabdoctaggingversion{0.80k}
 
 %<*driver>
 \DocumentMetadata
@@ -53,7 +53,7 @@
 % \section{Introduction}
 %
 % This package provides tagging support for the l3doc class.
-% It is work in progress. It is neither guarantied that every element
+% It is work in progress. It is neither guaranteed that every element
 % is correctly tagged nor that the output looks identical to the untagged version.
 %
 % If a documentation is tagged with this code, it is important to check the log-file
@@ -166,7 +166,7 @@
 % \end{variable}
 %
 %
-% \subsection{The \env{function} enviroment}
+% \subsection{The \env{function} environment}
 %
 % \begin{macro}{\__codedoc_function_typeset_start:}
 % This command starts the typesetting and opens the structure.
@@ -497,7 +497,8 @@
   tagging-recipe      = standard,
   inner-level-counter = ,
   transparent-level   = true,
-  legacy-code         = ,
+  early-legacy-code   = ,
+  late-legacy-code    = ,
   block-instance      = verbatim ,
   inner-instance      = ,
   final-code          = \legacymacrocodesetup ,

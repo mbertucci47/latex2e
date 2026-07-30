@@ -17,8 +17,8 @@
 %
 %    https://github.com/latex3/latex2e/issues
 %
-\def\ltlabsecIIdate{2026-05-25}
-\def\ltlabsecIIversion{0.9g}
+\def\ltlabsecIIdate{2026-07-12}
+\def\ltlabsecIIversion{0.9j}
 %<*driver>
 \DocumentMetadata{tagging=on,pdfstandard=ua-2}
 
@@ -42,6 +42,7 @@
 %
 %
 % \newcommand\key[1]{\texttt{#1}}
+% \newcommand\keyvalue[1]{\texttt{#1}}
 %
 %
 % \NewDocumentCommand\fmi{sO{}m}
@@ -130,13 +131,13 @@
 %      if, e.g., hyperref is loaded. As with the previous keys an empty value suppresses
 %      the bookmark entry.
 %
-%      \item[\key{nameref}] This allows to set the text used for a crossreference
+%      \item[\key{nameref}] This allows to set the text used for a cross reference
 %      with \cs{nameref}.
 %
 %      \item[\key{label}] This sets a label, so is an alternative to using a
 %      \cs{label} command.
 %
-%      \item[\key{subtitle}, \key{quote}] Theses keys will allow to pass a subtitle and
+%      \item[\key{subtitle}, \key{quote}] These keys will allow to pass a subtitle and
 %      a quote to the underlying code, but currently they are not yet used
 %      by the implementations of the standard \LaTeX{} heading commands.
 %
@@ -533,25 +534,38 @@
 %    \texttt{headformat} templates have a number of implicit
 %    variables that they expect to be set.\footnote{Maybe questionable}
 %
+% \changes{0.9h}{2026-07-04}{Support a \texttt{force-unnumbered} key
+%    (tagging/1473)}
 %
 % \begin{TemplateDescription}{heading}{\meta{all}}
 %
+% \changes{0.9h}{2026-06-21}{Support \texttt{column-spanning} key (tagging/1436)}
+%
 %  \TemplateKey{name}{tokenlist}
-%              {Referencable name of the heading instance. String that
+%              {Referenceable name of the heading instance. String that
 %               is acceptable in csnames for use in building counter
 %               names, etc.}{}
 %  \TemplateKey{parent-name}{tokenlist}
 %              {Name of the next higher heading instance. If not
 %               given, then the internal heading level of the heading
-%               instance is set to \texttt{0}}{}
+%               instance is set to \texttt{0} --- not yet
+%               implemented/may vanish}{}
 %  \TemplateKey{reset-counter}{tokenlist}
 %              {Name of the heading instance that should reset the
-%               numbering of this heading level (if any)}{}
+%               numbering of this heading level (if any) --- not yet
+%               implemented/may vanish}{}
 %  \TemplateKey{level}{integer}
 %              {Sets the internal heading-level rather than deducing
 %               it from \key{parent-name}. Can be used to specify the
 %               top-level heading if not \texttt{0}, or all headings
 %               in legacy implementations, e.g., through \cs{@startsection}}{}
+%
+%  \TemplateKey{force-unnumbered}{boolean}
+%              {This heading is never numbered, even if explicitly requested
+%               in the optional argument to the heading. If
+%               \texttt{false} then numbering is determined in the normal
+%               way (through \texttt{secnumdepth}, \texttt{*}, or a
+%               setting in the optional argument to the heading).}{false}
 %
 %  \TemplateKey{placement}{choice}
 %              {Set the heading placement, i.e., the behavior of the
@@ -576,6 +590,16 @@
 %    putting the heading on a page by its own, or arrange for
 %    paragraph handling of a following paragraph, etc.}
 %              {}
+%
+%
+%  \TemplateKey{column-spanning}{boolean}
+%              {If true produces a heading that spans columns in
+%               \texttt{twocolumn} typesetting.  Requires
+%               \key{placement} \texttt{=} \keyvalue{top} (and adjusts
+%               if necessary) and only has an effect
+%               if the columns are produced via the \texttt{twocolumn}
+%               class option and not when using \env{multicol}. This
+%               might get extended when we refactor the OR handling.}{false}
 %
 %  \TemplateKey{prefix}{tokenlist}
 %              {A fixed string, such as \enquote{Chapter}, that can be
@@ -1201,10 +1225,10 @@
   \@@_debug_typeout:n{---------~ Headformat~ instance~ arguments:}
   \@@_debug_typeout:n{1:~ keys~ =~ \exp_not:n{#1}}
   \@@_debug_typeout:n{2:~ prefix~ =~ \exp_not:n{#2}}
-  \@@_debug_typeout:n{3:~ number~ =~ \exp_not:n{#2}}
-  \@@_debug_typeout:n{4:~ title~ =~ \exp_not:n{#3}}
-  \@@_debug_typeout:n{5:~ subtitle~ =~ \exp_not:n{#4}}
-  \@@_debug_typeout:n{6:~ quotation~ =~ \exp_not:n{#5}}
+  \@@_debug_typeout:n{3:~ number~ =~ \exp_not:n{#3}}
+  \@@_debug_typeout:n{4:~ title~ =~ \exp_not:n{#4}}
+  \@@_debug_typeout:n{5:~ subtitle~ =~ \exp_not:n{#5}}
+  \@@_debug_typeout:n{6:~ quotation~ =~ \exp_not:n{#6}}
 }
 %    \end{macrocode}
 %  \end{macro}
@@ -1495,6 +1519,115 @@
 %    \end{macrocode}
 %  \end{macro}
 %
+%
+%
+% \subsection{General helper commands}
+%
+%
+%
+%  \begin{macro}{\WordSpaceAmount}
+%    Produce the amount of a (fractional) word space in the current
+%    font in a way that it can be used in a skip or dimen register
+%    assignment. The argument specifies the fraction, e.g., \texttt{2}
+%    gives two word spaces and \texttt{.5} would produce half a word
+%    space.
+%
+%    This general helper doesn't really belong here, so should be
+%    eventually moved.
+%    \begin{macrocode}
+\newcommand\WordSpaceAmount[1]{
+  \glueexpr 
+        #1\fontdimen2\the\font
+  plus  #1\fontdimen3\the\font
+  minus #1\fontdimen4\the\font
+  \relax
+}  
+%    \end{macrocode}
+%  \end{macro}
+%
+%
+%    Some designs automatically add a punctuation symbol (typically a
+%    period) at the end of a title, but that should only happen if the
+%    title doesn't already end in a punctuation symbol.
+%
+%    This is achieved by setting the \cs{spacefactor} for punctuation
+%    symbols (slightly) higher than \texttt{1000} and then checking the current
+%    \cs{spacefactor} before trying to add the punctuation. If it is
+%    \texttt{1000} or less then the title didn't end in a punctuation
+%    and we can safely add one, otherwise we don't.
+%
+%    If \cs{nonfrenchspacing} is in force this is automatically the
+%    case, but in \LaTeXe{} \cs{frenchspacing} did set the
+%    \cs{spacefactor} of all punctuation symbols to \texttt{1000}
+%    making them indistinguishable from other characters.
+%
+%    Thus, to make this work, we have to change \cs{frenchspacing}
+%    which is a breaking change as it can lead to pagination
+%    differences given that the word space after a punctuation gets
+%    (very minimally) larger this way. However, this approach
+%    was successfully used in the AMS classes for ages and it offers
+%    nice design possibilities so we enable it in documents using
+%    \cs{DocumentMetadata} automatically.
+%
+%
+%  \begin{macro}{\frenchspacing,\nonfrenchspacing}
+%    We give all punctuation symbols a unique \cs{sfcode} value so
+%    that it is even possible to determine which punctuation was just
+%    typeset.
+%    \begin{macrocode}
+\def\frenchspacing{\sfcode`\.1006\sfcode`\?1005\sfcode`\!1004%
+  \sfcode`\:1003\sfcode`\;1002\sfcode`\,1001 }
+%    \end{macrocode}
+%    The same should be done for \texttt{.?!} if we want to be able to
+%    distinguish those when \cs{nonfrenchspacing} is in force.  
+%    \begin{macrocode}
+\def\nonfrenchspacing{\sfcode`\.3002\sfcode`\?3001\sfcode`\!3000%
+  \sfcode`\:2000\sfcode`\;1500\sfcode`\,1250 }
+%    \end{macrocode}
+%  \end{macro}
+%    
+%
+%  \begin{macro}{\nopunct}
+%    The AMS classes also offered \cs{nopunct} that could be added at
+%    the end of a title and would prevent the addition of a punctuation
+%    symbol.
+%
+%    It should have a value for \cs{spacefactor} that is not
+%    used for \cs{frenchspacing} so that this special case can be
+%    detected.
+%    \begin{macrocode}
+\cs_new_protected:Npn \nopunct {\spacefactor 1007 }
+%    \end{macrocode}
+%  \end{macro}
+%
+%
+%
+%  \begin{macro}{\AddPunctuation}
+%    In the AMS classes this was called \cs{@addpunct}.
+%
+%    Note: this mechanism will fail if the text ending in a
+%    punctuation has an uppercase character just before the
+%    punctuation, e.g., if somebody writes \texttt{SOLUTION:}. In that
+%    case \texttt{SOLUTION\cs{@}.} would be necessary!
+% \changes{0.9j}{2026-057-12}{Support adding punctuation if not
+%    already present  (tagging/1477)}
+%    \begin{macrocode}
+\cs_new_protected:Npn \AddPunctuation #1 {
+  \relax\ifhmode
+    \ifnum\spacefactor>\@m
+      \@@_debug_typeout:n {--->~ punctuation~ '#1'~ not~ added}
+    \else
+      \@@_debug_typeout:n {--->~ punctuation~ '#1'~ added}
+      #1
+    \fi
+  \fi
+}
+%    \end{macrocode}
+%  \end{macro}
+%
+%
+%
+%
 % \subsection{Templates}
 %
 % \subsubsection{Template types}
@@ -1543,19 +1676,28 @@
 %  \begin{template}{heading display}
 %    The \texttt{display} template produces a display heading, i.e.,
 %    one that has vertical space before and after it.
+% \changes{0.9h}{2026-06-21}{Support \texttt{column-spanning} key (tagging/1436)}
 %    \begin{macrocode}
 \DeclareTemplateInterface{heading}{display}{9}
 {
-  , name          : tokenlist
-  , parent-name   : tokenlist
-  , reset-counter : tokenlist
-  , level         : integer = 0
+  , name            : tokenlist
+  , parent-name     : tokenlist
+  , reset-counter   : tokenlist
+  , level           : integer = 0
+%    \end{macrocode}
+%    By default headings can be numbered and the numbering is
+%    determined for each heading in the document individually.
+% \changes{0.9h}{2026-07-04}{Support a \texttt{force-unnumbered} key
+%    (tagging/1473)}
+%    \begin{macrocode}
+  , force-unnumbered : boolean = false
 %    \end{macrocode}
 %    The \key{placement} key sets default values for the keys
 %    \key{start-code} and \key{final-code}.
 %    \begin{macrocode}
-  , placement     : choice {page , top , normal } = normal
-  , mark-cmd      : function(1) =
+  , placement       : choice {page , top , normal } = normal
+  , column-spanning : boolean = false
+  , mark-cmd        : function(1) =
   %
   % many more keys for layout settings are missing for now
   , para-indent   : choice { true , false } = false
@@ -1673,6 +1815,12 @@
   , parent-name   = \l_@@_pname_tl
   , reset-counter = \l_@@_reset_cnt_tl
 %    \end{macrocode}
+%
+% \changes{0.9h}{2026-07-04}{Support a \texttt{force-unnumbered} key
+%    (tagging/1473)}
+%    \begin{macrocode}
+  , force-unnumbered = \l_@@_unnumbered_bool
+%    \end{macrocode}
 %    The \key{placement} key determines whether the heading can appear
 %    anywhere (\texttt{normal}), automatically starts a new page or
 %    column (\texttt{top}), or is on a page of its own (\texttt{page}.
@@ -1690,6 +1838,15 @@
         ,normal = \@@_debug_typeout:n{ A~ normal~ heading }
                   \tl_set:Nn \l_@@_placement_tl { normal }
                     }
+%    \end{macrocode}
+%    
+% \changes{0.9h}{2026-06-21}{Support \texttt{column-spanning} key
+%    (tagging/1436)}
+%    \begin{macrocode}
+  , column-spanning = \l_@@_column_spanning_bool
+%    \end{macrocode}
+%    
+%    \begin{macrocode}
   , mark-cmd      = \@@_mark_cmd:n
 %    \end{macrocode}
 %    For now we make use of the legacy coding for indentation of
@@ -1751,6 +1908,28 @@
 %   usually what I need.}
 %    \begin{macrocode}
   \tl_if_empty:oF {#1} { \SetTemplateKeys{heading}{display}{#1} }
+%    \end{macrocode}
+%
+%    If \key{column-spanning} is requested but we are not typesetting
+%    in two columns we turn it off to avoid using \cs{@topnewpage} as
+%    this would be wrong. Otherwise we check the placement value and
+%    adjust it if necessary.
+% \changes{0.9h}{2026-06-21}{Support \texttt{column-spanning} key
+%    (tagging/1436)}
+%    \begin{macrocode}
+  \bool_if:NT \l_@@_column_spanning_bool
+       {
+         \if@twocolumn
+           \str_if_eq:VnF \l_@@_placement_tl {top}
+             {
+               \@@_debug_typeout:n {column-spanning~ requires~
+                 placement=top.~ Adjusted!}
+               \tl_set:Nn \l_@@_placement_tl {top}
+             }
+         \else
+           \bool_set_false:N \l_@@_column_spanning_bool
+         \fi
+       }
 %    \end{macrocode}
 %    Based on the \key{placement} key we set up \cs{l_@@_start_code_tl}
 %    and \cs{l_@@_final_code_tl}. These two variables can also be set
@@ -1846,6 +2025,24 @@
   \@@_debug_typeout:n{use~ 'headformat'~instance:~
                        \l_@@_headformat_instance_tl }
   \use:e {
+%    \end{macrocode}
+%    
+%    As long as we don't have a decent interface for the OR we have to
+%    use \cs{@topnewpage} for getting spanning headings (which means
+%    we are really using a top float box. That in turn means we have
+%    to get all the vertical spacing and so inside this box so there
+%    is a lot of back and forth based on the value of
+%    \cs{l_@@_column_spanning_bool} for now.
+% \changes{0.9h}{2026-06-21}{Support \texttt{column-spanning} key
+%    (tagging/1436)}
+%    \begin{macrocode}
+    \bool_if:NT \l_@@_column_spanning_bool
+         { \exp_not:n {
+             \@topnewpage [
+             \dim_compare:nNnF{\l_@@_after_penalty_skip}={0pt}
+                 { \vspace*    \l_@@_after_penalty_skip }
+           }
+         }
     \UseInstance{headformat} { \l_@@_headformat_instance_tl }
                 { \exp_not:o \UnusedTemplateKeys }
                 { \exp_not:o { \l_@@_typeset_prefix_tl } }
@@ -1853,6 +2050,20 @@
                 { \exp_not:n { #3 } }
                 { \exp_not:o { \use_i:nn  #9 } }
                 { \exp_not:o { \use_ii:nn  #9 } }
+%    \end{macrocode}
+%    
+% \changes{0.9h}{2026-06-21}{Support \texttt{column-spanning} key
+%    (tagging/1436)}
+%    \begin{macrocode}
+    \bool_if:NT \l_@@_column_spanning_bool
+         {
+           \skip_vertical:N \l_@@_after_skip
+%    \end{macrocode}
+%    Add the final vspace after the heading and close the
+%    \cs{@topnewpage} which has an optional argument.
+%    \begin{macrocode}
+           ]
+         }
   }
  %
 % --- handle marks, toc-entry, bookmark, nameref, and label
@@ -1864,8 +2075,18 @@
 % Restore \texttt{secnumdepth}
 %    \begin{macrocode}
   \int_gset:Nn\c@secnumdepth{\l_@@_saved_secnumdepth_tl}
-  \par \nobreak
-  \skip_vertical:N \l_@@_after_skip
+  \par 
+%    \end{macrocode}
+%    If we have a spanning heading then the vertical skip is handled
+%    inside \cs{@topnewpage} and not here.
+% \changes{0.9h}{2026-06-21}{Support \texttt{column-spanning} key
+%    (tagging/1436)}
+%    \begin{macrocode}
+  \bool_if:NF \l_@@_column_spanning_bool
+       {
+         \nobreak
+         \skip_vertical:N \l_@@_after_skip
+       }
 % --- prepare next paragraph (defaults to \cs{@afterheading}
 %
   \l_@@_final_code_tl
@@ -1877,7 +2098,7 @@
 %
 %
 %
-%  \begin{macro}{}
+%  \begin{macro}{\if@openright}
 %
 %    \begin{macrocode}
 \AddToHook{begindocument}{
@@ -1905,6 +2126,12 @@
   , reset-counter  = \l_@@_reset_cnt_tl
 %    \end{macrocode}
 %
+% \changes{0.9h}{2026-07-04}{Support a \texttt{force-unnumbered} key
+%    (tagging/1473)}
+%    \begin{macrocode}
+  , force-unnumbered = \l_@@_unnumbered_bool
+%    \end{macrocode}
+%
 %    It wouldn't make sense to have page placement with a runin heading since
 %    there would be nothing to run into.
 %    \begin{macrocode}
@@ -1917,6 +2144,15 @@
         ,normal = \@@_debug_typeout:n{ A~ normal~ heading }
                   \tl_set:Nn \l_@@_placement_tl { normal }
                     }
+%    \end{macrocode}
+%    
+% \changes{0.9h}{2026-06-21}{Support \texttt{column-spanning} key
+%    (tagging/1436)}
+%    \begin{macrocode}
+  , column-spanning = \l_@@_column_spanning_bool
+%    \end{macrocode}
+%    
+%    \begin{macrocode}
   , mark-cmd       = \@@_mark_cmd:n
 %    \end{macrocode}
 %    In a runin heading you can't set up paragraph indentation of the
@@ -1973,6 +2209,17 @@
 %    \begin{macrocode}
   \tl_set_eq:Nc \theheading { the \l_@@_name_tl }
   \tl_if_empty:oF {#1} { \SetTemplateKeys{heading}{runin}{#1} }
+%    \end{macrocode}
+%    For now we don't support column-spanning in this template.
+% \changes{0.9h}{2026-06-21}{Support \texttt{column-spanning} key
+%    (tagging/1436)}
+%    \begin{macrocode}
+  \bool_if:NT \l_@@_column_spanning_bool
+    {
+        \@@_debug_typeout:n {column-spanning~ is~
+              not~ (yet)~ supported~ for~ runin~ headings!}
+        \bool_set_false:N \l_@@_column_spanning_bool
+    }
 %    \end{macrocode}
 %
 %    \begin{macrocode}
@@ -2165,7 +2412,7 @@
   \@@_show_arguments:nnnnnn {#1}{#2}{#3}{#4}{#5}{#6}
 %    \end{macrocode}
 %    First evaluate any key setting done by the user (normally
-%    supplied from the main heading isntance.
+%    supplied from the main heading instance.
 %    \begin{macrocode}
   \tl_if_empty:oF {#1} { \SetTemplateKeys{headformat}{hang}{#1} }
 %    \end{macrocode}
@@ -2254,7 +2501,7 @@
   \@@_show_arguments:nnnnnn {#1}{#2}{#3}{#4}{#5}{#6}
 %    \end{macrocode}
 %    First evaluate any key setting done by the user (normally
-%    supplied from the main heading isntance.
+%    supplied from the main heading instance.
 %    \begin{macrocode}
   \tl_if_empty:oF {#1} { \SetTemplateKeys{headformat}{hang}{#1} }
 %    \end{macrocode}
@@ -2341,16 +2588,23 @@
 %    \begin{macrocode}
 \cs_new:Npn \@@_determine_number_typesetting:N #1 {
 %    \end{macrocode}
-%
-%    Using or suppressing a heading number depends on the heading level
+%    If \key{force-unnumbered} was set to true (i.e.,
+%    \cs{l_@@_unnumbered_bool}) we don't do numbering.
+%    If that is not the case then  using or suppressing a heading
+%    number depends on the heading level
 %    compared to the document value of \cs{c@secnumdepth}. If that
 %    doesn't suppress the number then an explicit key or a star form
 %    might still have suppressed it.
+% \changes{0.9h}{2026-07-04}{Support a \texttt{force-unnumbered} key
+%    (tagging/1473)}
 %    \begin{macrocode}
-  \bool_set:Nn \l_@@_unnumbered_bool
-     { \bool_lazy_or_p:nn
-       { \int_compare_p:nNn \l_@@_level_int > \c@secnumdepth }
-       { \bool_if_p:N #1 }
+  \bool_if:NF \l__head_unnumbered_bool
+     {
+       \bool_set:Nn \l_@@_unnumbered_bool
+        { \bool_lazy_or_p:nn
+          { \int_compare_p:nNn \l_@@_level_int > \c@secnumdepth }
+          { \bool_if_p:N #1 }
+        }
      }
 %    \end{macrocode}
 %    If we aren't producing a heading with a number we set
@@ -2411,9 +2665,17 @@
 %    If \cs{l_@@_start_code_tl} holds code, we assume that it handles
 %    pagination, e.g., a \cs{clearpage}, etc. We therefore only add
 %    the skip that would follow the penalty.
+%
+%    And we do nothing at all when we have a spanning heading. Then
+%    this vspace is done inside \cs{@topnewpage}.
+% \changes{0.9h}{2026-06-21}{Support \texttt{column-spanning} key
+%    (tagging/1436)}
 %    \begin{macrocode}
-       \dim_compare:nNnF{\l_@@_after_penalty_skip}={0pt}
-          { \vspace*    \l_@@_after_penalty_skip }
+       \bool_if:NF \l_@@_column_spanning_bool
+            {
+              \dim_compare:nNnF{\l_@@_after_penalty_skip}={0pt}
+                  { \vspace*    \l_@@_after_penalty_skip }
+            }
      }
 }
 %    \end{macrocode}
@@ -2576,29 +2838,6 @@
 % \subsubsection{Instances (sample/default definitions)}
 %
 %
-%  \begin{macro}{\WordSpaceAmount}
-%
-%    Produce the amount of a (fractional) word space in the current
-%    font in a way that it can be used in a skip or dimen register
-%    assignment. The argument specifies the fraction, e.g., \texttt{2}
-%    gives two wordspaces and \texttt{.5} would produce half a word
-%    space.
-%
-%    This general helper doesn't really belong here, so should be
-%    eventually moved.
-%    \begin{macrocode}
-\newcommand\WordSpaceAmount[1]{
-  \glueexpr 
-        #1\fontdimen2\the\font
-  plus  #1\fontdimen3\the\font
-  minus #1\fontdimen4\the\font
-  \relax
-}  
-%    \end{macrocode}
-%  \end{macro}
-%
-%
-%
 %  \begin{instance}{heading part}
 %  An instance suitable for \cls{book} and \cls{report}. An instance suitable
 %  for \cls{article} is above in the hook.
@@ -2627,6 +2866,7 @@
   , name           = chapter
   , level          = 0
   , placement      = top
+  , column-spanning = true
   , after-penalty-vspace = 50pt
   , after-vspace   = 40pt
   , prefix         = \@chapapp
@@ -2642,6 +2882,18 @@
 %  \end{instance}
 %
 %
+%  \begin{macro}{\@chapapp}
+%    To improve compatibility with classes that use \cs{secdef} but
+%    don't provide a definition for \cs{@chapapp} used in the
+%    \key{prefix} key above, we define this command if
+%    necessary. Otherwise such a class would error if \cs{chapter} is
+%    used.
+% \changes{0.9h}{2026-07-08}{Define \cs{@chapapp}, if necessary (tagging/1482)}
+%    \begin{macrocode}
+\AtBeginDocument{
+  \cs_if_exist:NF \@chapapp { \cs_new:Npn \@chapapp {Chapter} } }
+%    \end{macrocode}
+%  \end{macro}
 %  \begin{instance}{heading section}
 %
 %    \begin{macrocode}

@@ -26,9 +26,9 @@
 % extension .ins) which are part of the distribution.
 %
 % \fi
-% Filename: ltnews43.tex
+% Filename: ltnews44.tex
 %
-% This is issue 43 of LaTeX News.
+% This is issue 44 of LaTeX News.
 
 \NeedsTeXFormat{LaTeX2e}[2020-02-02]
 
@@ -152,9 +152,6 @@
 
 \emph{to write}
 
-\section{New or improved commands}
-
-
 \section{News from the Tagged PDF project}
 
 \subsection{Revisiting the para-handling logic for block environment}
@@ -179,7 +176,80 @@ situations.
 %
 \taggingissue[s]{1402 and 1415 among others}
 
+
+\subsection{Support \texttt{force-unnumbered} key in heading templates}
+
+\emph{to write}
+%
+\taggingissue{1473}
+
+
+\subsection{Replaced \texttt{legacy-code} key in blockenv template}
+
+The blockenv template had a \texttt{legacy-code} key, used to support
+some legacy setup for the generic \env{list} environment and for the
+\env{verbatim} extension offered by the \texttt{ltugboat} class where
+you can write \verb=\begin{verbatim}[\small]= to get a verbatim
+display in a smaller font size.
+
+However, if the \env{verbatim} was directly preceded by text the
+content of the key was evaluated while still being in horizontal
+mode. In that case the \cs{small} changed not only the verbatim
+display but, as a side effect, also altered the \cs{baselineskip} of
+the preceding text. This has been corrected by providing two keys:
+\texttt{early-legacy-code} which is evaluted near the start of the
+template, possibly still in horizontal mode (used by \env{list}) and
+\texttt{late-legacy-code} which is evaluted after returning to
+vertical mode (used by \env{verbatim}).
+%
+\taggingissue{1503}
+
+
+\subsection{Heading templates now support column spanning}
+
+In twocolumn documents top-level headings usually start on a new page
+and span both columns. In \LaTeXe{} this was hardwired and headings
+such as \cs{chapter} showed this behavior. In the new template-based
+implementation this is now more flexible and one sets this
+independently from forcing a new page by setting the key
+\texttt{column-spanning} to \texttt{true} (default for \cs{chapter})
+or \texttt{false} (default for other headings).  Thus
+\begin{verbatim}
+  \section[column-spanning=true]{title}
+\end{verbatim}
+generates a one-off \cs{section} heading that spans both columns. Due
+to the way the \LaTeX{} output routine is currently implemented that
+automatically also starts a new page, i.e., one can't generate
+spanning headings in the middle of a page (that can only be done with
+the \pkg{multicol} package at the moment). That restriction may be
+lifted when the output routine is redefined.
+%
+\taggingissue{1436}
+
+
+\subsection{Heading template instances for AMS classes}
+
+\emph{to write including \cs{AddPunctuation}}
+%
+\taggingissue{1477}
+
+
+%\section{New or improved commands}
+
+
+
 %\section{Code improvements}
+\section{Code improvements}
+
+\subsection{Support for \cs{UseName} in template key bindings}
+
+We have extended the logic in the key-binding argument for
+\cs{DeclareTemplateCode}, such that you can use the keyword \texttt{name} here (in addition to \texttt{global})  without any
+performance impact when using templates. This allows automatic variable
+creation with \enquote{awkward} characters, most notably \texttt{-} and
+numerals. Of course, such variables then also need to be referred to via
+\cs{UseName} or some equivalent method in the code, so this is only useful if
+there is a pressing need for such special names.
 
 %\section{Bug fixes}
 
@@ -197,6 +267,16 @@ situations.
 
 %\section{Changes to files in the \pkg{cyrillic} category}
 
+\section{Documentation changes}
+
+\subsection{US Spelling}
+
+We have (finally) decided that standardizing the spelling in the \LaTeX{}
+sources to use US-English is the realistic position.\footnote{None of the native
+English speakers on the team are from the US!} This means that the
+documentation better aligns with the code. Note that idiom may still be more
+varied: this is harder to adjust than spelling.
+
 \begin{thebibliography}{9}\frenchspacing
 
 %\fontsize{9.3}{11.3}\selectfont
@@ -210,7 +290,7 @@ Leslie Lamport.
 \newblock Reprinted with corrections in 1996.
 
 \bibitem{44:ltnews} \LaTeX{} Project Team.
-  \emph{\LaTeXe{} news 1--44}. June, 2026.
+  \emph{\LaTeXe{} news 1--44}. November, 2026.
   \url{https://latex-project.org/news/latex2e-news/ltnews.pdf}
 
 \end{thebibliography}
