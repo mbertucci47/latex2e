@@ -12,8 +12,8 @@
 %    https://www.latex-project.org/lppl.txt
 %
 %<*package>
-\def\ltlabnamesdate{2026-04-28}
-\def\ltlabnamesversion{0.8k}
+\def\ltlabnamesdate{2026-09-05}
+\def\ltlabnamesversion{0.8o}
 %</package>
 %<*driver>
 \DocumentMetadata{tagging=on,pdfstandard=ua-2}
@@ -178,12 +178,24 @@ itembody,     LBody,    pdf2,
 footnote,     FENote,   pdf2,
 footnotemark, Lbl,      pdf2,
 footnotelabel,Lbl,      pdf2,
-text-unit,    Part,     pdf2,
-text,         P,        pdf2,
+semantic-para,Part,     pdf2,
+text-block,   P,        pdf2,
+text-fragment,Span,     pdf2,
+%    \end{macrocode}
+%    
+%    \begin{macrocode}
+text-parbox,     Div,   pdf2,
+text-minipage,   Div,   pdf2,
+heading-parbox,  Span,  pdf2,
+heading-minipage,Span,  pdf2,
 %    \end{macrocode}
 % \subsection{From sec code}
+%
+%    \fmi{don't think this should be called
+%    \texttt{section-number}. Maybe \texttt{heading-number}?}
 %    \begin{macrocode}
-section-number, Span,     pdf2,
+heading-number, Lbl,    pdf2,
+heading-fragment, Span, pdf2,
 %    \end{macrocode}
 % \subsection{From block code}
 %    \begin{macrocode}
@@ -224,8 +236,8 @@ tables,       Sect,     pdf2,
 }    
 \cs_set_protected:Npn\@@_AssignStructureRole#1#2
  {
-   \prop_get:NnNF\g_@@_role_tags_NS_prop{#2}\l_@@_tmp_unused_tl
-    {\exp_args:Ne\tagpdfsetup{role/new-tag=#2/\UseStructureName{#1}}}
+   \tag_if_tag_known:nF {#2}   
+     {\exp_args:Ne\tagpdfsetup{role/new-tag=#2/\UseStructureName{#1}}}
    \tl_set:cn { l_@@_name_#1_tl }{#2}
  }
 %    \end{macrocode}
@@ -245,19 +257,22 @@ tables,       Sect,     pdf2,
 % to add attributes.
 %    \begin{macrocode}
 %<*package>
-\NewStructureName{span}
-\AssignStructureRole{span}{Span}
+\NewStructureName{span}               % <-- different name?
+%\AssignStructureRole{span}{Span}
+\AssignStructureRole{span}{text-fragment}
 %</package>
 %    \end{macrocode}
 %
 % \subsubsection{Paragraphs}
 % 
+% \changes{v0.8l}{2026/07/29}{Renamed text-unit to semantic-para}
+% \changes{v0.8l}{2026/07/29}{Renamed text to text-block}
 %    \begin{macrocode}
 %<*package>
 \NewStructureName{para/textblock}
-\AssignStructureRole{para/textblock}{text}
+\AssignStructureRole{para/textblock}{text-block}
 \NewStructureName{para/semantic}
-\AssignStructureRole{para/semantic}{text-unit}
+\AssignStructureRole{para/semantic}{semantic-para}
 %</package>
 %    \end{macrocode}
 % 
@@ -269,51 +284,70 @@ tables,       Sect,     pdf2,
 \AssignStructureRole{sec/-1}{Part}
 \NewStructureName{sec/-1/title}
 \AssignStructureRole{sec/-1/title}{part}
-\NewStructureName{sec/-1/titleline}
+\NewStructureName{sec/-1/fragment}
 %    \end{macrocode}
 % Sub does not work as part is rolemapped to Title so we use Span 
 %    \begin{macrocode}
-\AssignStructureRole{sec/-1/titleline}{Span} 
+\AssignStructureRole{sec/-1/fragment}{heading-fragment} 
+%    \end{macrocode}
+%    \fmi{2026/08/22: I have some serious doubts that defining the structure name for the
+%    /number on a heading level is in any way useful. It certainly
+%    doesn't fit nicely with the template approach which is why I'm
+%    currently not using the declarations here.}
+%    \fmi{2026/09/05: Same for /titleline (which I renamed to fragment because it may
+%    not be a ``line''). Again I don't think
+%    it will ever differ for different levels.}
+%    \begin{macrocode}
 \NewStructureName{sec/-1/number}
-\AssignStructureRole{sec/-1/number}{section-number}
+\AssignStructureRole{sec/-1/number}{heading-number}
 \NewStructureName{sec/0}
 \AssignStructureRole{sec/0}{Sect}
 \NewStructureName{sec/0/title}
 \AssignStructureRole{sec/0/title}{chapter}
-\NewStructureName{sec/0/titleline}
-\AssignStructureRole{sec/0/titleline}{Span}
+\NewStructureName{sec/0/fragment}
+\AssignStructureRole{sec/0/fragment}{heading-fragment}
 \NewStructureName{sec/0/number}
-\AssignStructureRole{sec/0/number}{section-number}
+\AssignStructureRole{sec/0/number}{heading-number}
 \NewStructureName{sec/1}
 \AssignStructureRole{sec/1}{Sect}
 \NewStructureName{sec/1/title}
 \AssignStructureRole{sec/1/title}{section}
+\NewStructureName{sec/1/fragment}
+\AssignStructureRole{sec/1/fragment}{heading-fragment}
+\NewStructureName{sec/2/fragment}
 \NewStructureName{sec/1/number}
-\AssignStructureRole{sec/1/number}{section-number}
+\AssignStructureRole{sec/1/number}{heading-number}
 \NewStructureName{sec/2}
 \AssignStructureRole{sec/2}{Sect}
 \NewStructureName{sec/2/title}
 \AssignStructureRole{sec/2/title}{subsection}
+\AssignStructureRole{sec/2/fragment}{heading-fragment}
 \NewStructureName{sec/2/number}
-\AssignStructureRole{sec/2/number}{section-number}
+\AssignStructureRole{sec/2/number}{heading-number}
 \NewStructureName{sec/3}
 \AssignStructureRole{sec/3}{Sect}
 \NewStructureName{sec/3/title}
 \AssignStructureRole{sec/3/title}{subsubsection}
+\NewStructureName{sec/3/fragment}
+\AssignStructureRole{sec/3/fragment}{heading-fragment}
 \NewStructureName{sec/3/number}
-\AssignStructureRole{sec/3/number}{section-number}
+\AssignStructureRole{sec/3/number}{heading-number}
 \NewStructureName{sec/4}
 \AssignStructureRole{sec/4}{Sect}
 \NewStructureName{sec/4/title}
 \AssignStructureRole{sec/4/title}{paragraph}
+\NewStructureName{sec/4/fragment}
+\AssignStructureRole{sec/4/fragment}{heading-fragment}
 \NewStructureName{sec/4/number}
-\AssignStructureRole{sec/4/number}{section-number}
+\AssignStructureRole{sec/4/number}{heading-number}
 \NewStructureName{sec/5}
 \AssignStructureRole{sec/5}{Sect}
 \NewStructureName{sec/5/title}
 \AssignStructureRole{sec/5/title}{subparagraph}
+\NewStructureName{sec/5/fragment}
+\AssignStructureRole{sec/5/fragment}{heading-fragment}
 \NewStructureName{sec/5/number}
-\AssignStructureRole{sec/5/number}{section-number}
+\AssignStructureRole{sec/5/number}{heading-number}
 %    \end{macrocode}
 %
 % \subsubsection{Table of contents and similar} 
@@ -528,9 +562,14 @@ tables,       Sect,     pdf2,
 % \subsubsection{Minipages and parboxes}
 %    \begin{macrocode}
 \NewStructureName{minipage}
-\AssignStructureRole{minipage}{Div}
+\AssignStructureRole{minipage}{text-minipage}
 \NewStructureName{parbox}
-\AssignStructureRole{parbox}{Div}
+\AssignStructureRole{parbox}{text-parbox}
+%    \end{macrocode}
+%    
+%    \begin{macrocode}
+\NewStructureName{sec/parbox}
+\AssignStructureRole{sec/parbox}{heading-parbox}
 %    \end{macrocode}
 %
 % \subsubsection{Text}
@@ -604,26 +643,14 @@ tables,       Sect,     pdf2,
 % with the content \texttt{/O /Table /ColSpan \meta{number}} and
 % \texttt{/O /Table /RowSpan \meta{number}}
 %    \begin{macrocode}
-   role/new-attribute = {TH-col}  {/O /Table /Scope /Column},
-   role/new-attribute = {TH-row}  {/O /Table /Scope /Row},
-   role/new-attribute = {TH-both} {/O /Table /Scope /Both},
+   role/new-attribute* = {TH-col}  {/O /Table /Scope /Column},
+   role/new-attribute* = {TH-row}  {/O /Table /Scope /Row},
+   role/new-attribute* = {TH-both} {/O /Table /Scope /Both},
    role/new-attribute = {ARIA-role-presentation} 
                           {/O /ARIA-1.1/role (presentation)}
 %    \end{macrocode}
 %    \begin{macrocode}
   } %end tagpdfsetup
-%    \end{macrocode}
-% The three main table attributes are put directly into the class map 
-% TODO: either tagpdf should do that directly all roles or offer an interface:
-%    \begin{macrocode}
-\ExplSyntaxOn
-    \seq_gput_left:Ne\g__tag_attr_class_used_seq
-      {\pdf_name_from_unicode_e:n{TH-col}}
-    \seq_gput_left:Ne\g__tag_attr_class_used_seq
-      {\pdf_name_from_unicode_e:n{TH-row}}
-    \seq_gput_left:Ne\g__tag_attr_class_used_seq
-      {\pdf_name_from_unicode_e:n{TH-both}}
-\ExplSyntaxOff      
 %    \end{macrocode}
 %    \begin{macrocode}
 %</package>  
